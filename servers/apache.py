@@ -235,10 +235,14 @@ class Vhost(object):
         b.join()
         try:
             f = open(os.path.join(self.main.conf.apache_vhosts_dir,"%s.conf" % self.name),'w+')
-        except IOError:
-            self.main.log.error('Cannot write to file %s! Please check config' %
+            f.write(self.as_text())
+        except IOError as e:
+            self.main.log.exception(e)
+            err = 'Cannot write to file %s! Please check config' % (
                 os.path.join(self.main.conf.apache_vhosts_dir,"%s.conf" % self.name))
-        f.write(self.as_text())
+            self.main.log.error(err)
+            raise RuntimeError(err)
+        
 
     def delete(self):
         """Delete vhost"""
@@ -246,7 +250,10 @@ class Vhost(object):
             if os.path.exists(self.conf()):
                 os.remove(self.conf())
         except IOError as e:
-            self.main.log.error('Cannot remove file %s, %s' % (self.conf(), e))
+            self.main.log.exception(e)
+            err = 'Cannot remove file %s' % (self.conf())
+            self.main.log.error(err)
+            raise RuntimeError(err)
 
     def as_text(self):
         """Output vhost as Apache2 config"""
